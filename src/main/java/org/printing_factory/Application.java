@@ -15,13 +15,17 @@ import org.jodconverter.core.office.OfficeException;
 import org.printing_factory.bindings.Bindings;
 import org.printing_factory.config.Config;
 import org.printing_factory.docu.DocumentManager;
+import org.printing_factory.path.WatchPath;
 import org.printing_factory.printing.IppConnection;
 import org.printing_factory.printing.PathParser;
 import org.printing_factory.printing.Printer;
 import org.printing_factory.printing.ipp.jobs.CreateJob;
 import org.printing_factory.printing.ipp.jobs.GetJobAttributes;
 import org.printing_factory.printing.ipp.jobs.SendDocument;
-import org.printing_factory.util.PrintPath;
+import org.printing_factory.watcher.Watcher;
+import org.printing_factory.watcher.WatcherFactory;
+
+import de.gmuth.ipp.attributes.MediaSource;
 
 /**
  * Application
@@ -41,7 +45,7 @@ public class Application {
 					String.format("Printing %s", path.getFileName()),
 					Bindings.into(docProps.docFormat()),
 					path.getSides(),
-					path.getPaperType(),
+					MediaSource.Tray1,
 					path.getCopies());
 
 			return printer.createJob(jobProps)
@@ -60,7 +64,7 @@ public class Application {
 
 		Config config = new Config();
 
-		Path dir = Paths.get(System.getenv("PRINT_DIR"));
+		WatchPath watchPath = new WatchPath(config.printDir);
 		var filePathQueue = new ConcurrentLinkedQueue<PathParser>();
 		var printJobQueue = new ConcurrentLinkedQueue<SendDocument>();
 		var fileSent = new CopyOnWriteArrayList<GetJobAttributes>();
@@ -73,14 +77,9 @@ public class Application {
 
 		Thread.startVirtualThread(new StatusChecker(fileSent));
 
-		new WatchFolder(dir, (path) -> {
-			Logger wfl = Logger.getLogger("WatchFolders");
-			wfl.info("File created: " + path.toString());
-			PathParser parsedPath = PathParser.from(PrintPath.into(path, dir).getParts(), path.toAbsolutePath());
+		Watcher watcher = WatcherFactory.create(watchPath, filePathQueue);
 
-			filePathQueue.add(parsedPath);
-
-		});
+		watcher.watch(watchPath, (path) -> new PathParser(path));
 
 		Thread.startVirtualThread(new JobCreator(filePathQueue, printJobQueue, (path) -> {
 			try {
