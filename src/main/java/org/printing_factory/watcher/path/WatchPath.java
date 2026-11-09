@@ -1,4 +1,4 @@
-package org.printing_factory.path;
+package org.printing_factory.watcher.path;
 
 import java.net.URI;
 import java.nio.file.Path;

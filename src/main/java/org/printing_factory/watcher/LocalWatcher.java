@@ -10,9 +10,9 @@ import org.apache.commons.io.monitor.FileAlterationListenerAdaptor;
 import org.apache.commons.io.monitor.FileAlterationMonitor;
 import org.apache.commons.io.monitor.FileAlterationObserver;
 import org.apache.commons.io.monitor.FileEntry;
-import org.printing_factory.path.WatchPath;
 import org.printing_factory.printing.PathParser;
 import org.printing_factory.util.Logging;
+import org.printing_factory.watcher.path.WatchPath;
 
 /**
  * LocalWatcher

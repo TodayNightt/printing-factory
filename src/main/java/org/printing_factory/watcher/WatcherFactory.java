@@ -2,8 +2,8 @@ package org.printing_factory.watcher;
 
 import java.util.concurrent.ConcurrentLinkedQueue;
 
-import org.printing_factory.path.WatchPath;
 import org.printing_factory.printing.PathParser;
+import org.printing_factory.watcher.path.WatchPath;
 
 /**
  * WatchFactory

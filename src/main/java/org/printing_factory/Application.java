@@ -12,7 +12,6 @@ import org.jodconverter.core.office.OfficeException;
 import org.printing_factory.bindings.Bindings;
 import org.printing_factory.config.Config;
 import org.printing_factory.docu.DocumentManager;
-import org.printing_factory.path.WatchPath;
 import org.printing_factory.printing.PathParser;
 import org.printing_factory.printing.Printer;
 import org.printing_factory.printing.ipp.jobs.CreateJob;
@@ -20,6 +19,7 @@ import org.printing_factory.printing.ipp.jobs.GetJobAttributes;
 import org.printing_factory.printing.ipp.jobs.SendDocument;
 import org.printing_factory.watcher.Watcher;
 import org.printing_factory.watcher.WatcherFactory;
+import org.printing_factory.watcher.path.WatchPath;
 
 import de.gmuth.ipp.attributes.MediaSource;
 

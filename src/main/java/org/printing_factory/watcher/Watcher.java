@@ -4,8 +4,8 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.function.Function;
 
-import org.printing_factory.path.WatchPath;
 import org.printing_factory.printing.PathParser;
+import org.printing_factory.watcher.path.WatchPath;
 
 /**
  * Watcher
