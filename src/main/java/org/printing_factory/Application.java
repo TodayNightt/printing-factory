@@ -4,9 +4,6 @@ import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.net.URI;
-import java.net.URL;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.logging.Logger;
@@ -16,7 +13,6 @@ import org.printing_factory.bindings.Bindings;
 import org.printing_factory.config.Config;
 import org.printing_factory.docu.DocumentManager;
 import org.printing_factory.path.WatchPath;
-import org.printing_factory.printing.IppConnection;
 import org.printing_factory.printing.PathParser;
 import org.printing_factory.printing.Printer;
 import org.printing_factory.printing.ipp.jobs.CreateJob;
@@ -69,9 +65,7 @@ public class Application {
 		var printJobQueue = new ConcurrentLinkedQueue<SendDocument>();
 		var fileSent = new CopyOnWriteArrayList<GetJobAttributes>();
 
-		var printerUri = URI.create(config.printerUri);
-		var ippConnection = new IppConnection(printerUri);
-		var printer = new Printer(ippConnection);
+		var printer = new Printer(URI.create(config.printerUri));
 
 		Thread.startVirtualThread(new JobsSender(printJobQueue, fileSent));
 
