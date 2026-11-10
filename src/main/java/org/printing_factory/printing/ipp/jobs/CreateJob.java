@@ -21,14 +21,13 @@ public class CreateJob extends OperationSender<SendDocument, CreateJob.CreateJob
 
 	public CreateJob(IppConnection connection, CreateJob.CreateJobProps props) {
 		this.connection = connection;
-		request = generateRequest(props);
-
 	}
 
 	@Override
 	public SendDocument send() throws Exception {
-		// Send the request using the connection
+		IppRequest request = generateRequest(props);
 		IppResponse res = connection.sendRequest(request);
+
 		System.out.println(
 				"SendDocument send() for jobName :" + request.getOperationGroup().getValueAsString("job-name"));
 		printResponse(res);
@@ -45,15 +44,15 @@ public class CreateJob extends OperationSender<SendDocument, CreateJob.CreateJob
 
 	@Override
 	public IppRequest generateRequest(CreateJobProps props) {
-		var req = connection.createRequest(IppOperation.CreateJob, null);
+		IppRequest req = connection.createRequest(IppOperation.CreateJob, null);
 
 		// operation group
-		var operationGroup = request.getOperationGroup();
+		var operationGroup = req.getOperationGroup();
 		operationGroup.attribute("requesting-user-name", IppTag.NameWithoutLanguage, connection.getUserName());
 		operationGroup.attribute("job-name", IppTag.NameWithoutLanguage, props.jobName);
 
 		// Job group
-		IppAttributesGroup jobGroup = request.createAttributesGroup(IppTag.Job);
+		IppAttributesGroup jobGroup = req.createAttributesGroup(IppTag.Job);
 		var sidesAttr = props.sides.buildIppAttribute(connection.getPrinterAttributes());
 
 		var mediaColAttr = new IppCollection();

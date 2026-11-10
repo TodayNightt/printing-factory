@@ -1,27 +1,28 @@
 package org.printing_factory;
 
-import java.io.ByteArrayInputStream;
-import java.io.File;
+import java.nio.file.Path;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.logging.Logger;
 
-import org.jodconverter.core.office.OfficeException;
-import org.printing_factory.docu.DocFormat;
+import javax.annotation.Nonnull;
+
 import org.printing_factory.docu.DocumentManager;
-import org.printing_factory.printing.PathParser;
+import org.printing_factory.docu.DocumentManager.DocumentManagerProps;
+import org.printing_factory.file.FileDescriptor;
 import org.printing_factory.printing.Printer;
 import org.printing_factory.printing.ipp.jobs.CreateJob;
 import org.printing_factory.printing.ipp.jobs.SendDocument;
 
+import de.gmuth.ipp.attributes.DocumentFormat;
 import de.gmuth.ipp.attributes.MediaSource;
 
 public class JobCreator implements Runnable {
 	private static final Logger logger = Logger.getLogger(JobCreator.class.getName());
-	private ConcurrentLinkedQueue<PathParser> filePathQueue;
+	private ConcurrentLinkedQueue<Path> filePathQueue;
 	private ConcurrentLinkedQueue<SendDocument> printJobsQueue;
 	private Printer printer;
 
-	public JobCreator(ConcurrentLinkedQueue<PathParser> filePathQueue,
+	public JobCreator(ConcurrentLinkedQueue<Path> filePathQueue,
 			ConcurrentLinkedQueue<SendDocument> printJobsQueue,
 			Printer printer) {
 		this.filePathQueue = filePathQueue;
@@ -33,39 +34,34 @@ public class JobCreator implements Runnable {
 	public void run() {
 		while (true) {
 			if (!filePathQueue.isEmpty()) {
-				PathParser path = filePathQueue.poll();
+				Path path = filePathQueue.poll();
 				try {
-					var docProps = DocumentManager.manage(new File(path.getPath().toString()));
-					var job = createPrintJob(path, docProps);
+					DocumentManagerProps props = DocumentManager.manage(path);
+					var job = createPrintJob(props);
 
 					this.printJobsQueue.add(job);
-				} catch (OfficeException e) {
-					logger.severe("Document management failed: " + e.getMessage());
 				} catch (Exception e) {
 					logger.severe(e.getMessage());
 				}
-
 			}
+
 		}
 	}
 
-	SendDocument createPrintJob(PathParser path,
-			DocumentManager.DocumentManagerProps docProps) throws InvalidDocumentException {
-		if (docProps == null || docProps.fileStream() == null) {
-			throw new InvalidDocumentException(path.getFileName());
-		}
-
+	SendDocument createPrintJob(
+			@Nonnull DocumentManager.DocumentManagerProps docProps) throws InvalidDocumentException {
+		FileDescriptor fileDes = docProps.fileDescriptor();
 		try {
 			var jobProps = new CreateJob.CreateJobProps(
-					String.format("Printing %s", path.getFileName()),
-					DocFormat.toDocumentFormat(docProps.docFormat()),
-					path.getSides(),
+					String.format("Printing %s", fileDes.getFileName()),
+					DocumentFormat.PDF,
+					fileDes.getPrintOptions().getSides(),
 					MediaSource.Tray1,
-					path.getCopies());
+					fileDes.getPrintOptions().getCopies());
 
 			return this.printer.createJob(jobProps)
 					.send()
-					.setFile((ByteArrayInputStream) docProps.fileStream());
+					.setFile(docProps.file());
 
 		} catch (Exception e) {
 			logger.severe("Failed to create print job: " + e.getMessage());
