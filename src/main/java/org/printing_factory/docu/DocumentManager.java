@@ -15,14 +15,18 @@ import org.jodconverter.core.office.OfficeUtils;
 import org.jodconverter.local.JodConverter;
 import org.jodconverter.local.office.LocalOfficeManager;
 import org.printing_factory.file.FileDescriptor;
+import org.printing_factory.printing.PathParser.InvalidFileParametersException;
 
 public class DocumentManager {
 	public record DocumentManagerProps(FileDescriptor fileDescriptor, File file) {
 	};
 
 	public static DocumentManagerProps manage(Path filePath)
-			throws NotSupportedFileException, RetrieveFileHandleException, FileConvertionException {
+			throws NotSupportedFileException, RetrieveFileHandleException, FileConvertionException,
+			InvalidFileParametersException {
+
 		FileDescriptor fileDescriptor = new FileDescriptor(filePath);
+
 		if (fileDescriptor.is_not_supported()) {
 			throw new NotSupportedFileException(fileDescriptor.getFileName());
 		}

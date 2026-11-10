@@ -4,6 +4,7 @@ import java.io.File;
 import java.nio.file.Path;
 
 import org.printing_factory.printing.PathParser;
+import org.printing_factory.printing.PathParser.InvalidFileParametersException;
 
 /**
  * FileDesciptor
@@ -14,7 +15,7 @@ public class FileDescriptor {
 	private FileType type;
 	private PathParser printOptions;
 
-	public FileDescriptor(Path filePath) {
+	public FileDescriptor(Path filePath) throws InvalidFileParametersException {
 		this.file = filePath.toFile();
 
 		String fileName = file.getName();
@@ -54,8 +55,5 @@ public class FileDescriptor {
 
 	public enum FileType {
 		PDF, TIFF, PNG, JPG, DOCX, NOT_SUPPORTED;
-	}
-
-	class PrintOptions {
 	}
 }

@@ -56,8 +56,8 @@ public class JobCreator implements Runnable {
 					String.format("Printing %s", fileDes.getFileName()),
 					DocumentFormat.PDF,
 					fileDes.getPrintOptions().getSides(),
-					MediaSource.Tray1,
-					fileDes.getPrintOptions().getCopies());
+					fileDes.getPrintOptions().getTray().mediaSource(),
+					fileDes.getPrintOptions().getQuantity());
 
 			return this.printer.createJob(jobProps)
 					.send()
