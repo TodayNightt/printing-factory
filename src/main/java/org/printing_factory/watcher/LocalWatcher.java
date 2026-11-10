@@ -10,7 +10,6 @@ import org.apache.commons.io.monitor.FileAlterationListenerAdaptor;
 import org.apache.commons.io.monitor.FileAlterationMonitor;
 import org.apache.commons.io.monitor.FileAlterationObserver;
 import org.apache.commons.io.monitor.FileEntry;
-import org.printing_factory.printing.PathParser;
 import org.printing_factory.util.Logging;
 import org.printing_factory.watcher.path.WatchPath;
 
@@ -18,9 +17,9 @@ import org.printing_factory.watcher.path.WatchPath;
  * LocalWatcher
  */
 public class LocalWatcher implements Watcher {
-	private ConcurrentLinkedQueue<PathParser> sender;
+	private ConcurrentLinkedQueue<Path> sender;
 
-	public LocalWatcher(ConcurrentLinkedQueue<PathParser> sender) {
+	public LocalWatcher(ConcurrentLinkedQueue<Path> sender) {
 		this.sender = sender;
 	}
 
@@ -34,7 +33,7 @@ public class LocalWatcher implements Watcher {
 	}
 
 	@Override
-	public void watch(WatchPath path, java.util.function.Function<Path, PathParser> eventHandler) throws IOException {
+	public void watch(WatchPath path) throws IOException {
 		FileAlterationObserver observer = FileAlterationObserver.builder()
 				.setRootEntry(new FileEntry(path.getPath().toFile()))
 				.get();
@@ -42,8 +41,7 @@ public class LocalWatcher implements Watcher {
 		observer.addListener(new FileAlterationListenerAdaptor() {
 			@Override
 			public void onFileCreate(File file) {
-				PathParser result = eventHandler.apply(file.toPath());
-				setToQueue(result);
+				setToQueue(file.toPath());
 			}
 
 			@Override
@@ -65,7 +63,7 @@ public class LocalWatcher implements Watcher {
 		t.setUncaughtExceptionHandler(new ExceptionCapturer());
 	}
 
-	private void setToQueue(PathParser path) {
+	private void setToQueue(Path path) {
 		this.sender.add(path);
 	}
 

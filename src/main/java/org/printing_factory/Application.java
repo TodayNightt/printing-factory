@@ -2,12 +2,12 @@ package org.printing_factory;
 
 import java.io.IOException;
 import java.net.URI;
+import java.nio.file.Path;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.logging.Logger;
 
 import org.printing_factory.config.Config;
-import org.printing_factory.printing.PathParser;
 import org.printing_factory.printing.Printer;
 import org.printing_factory.printing.ipp.jobs.GetJobAttributes;
 import org.printing_factory.printing.ipp.jobs.SendDocument;
@@ -27,7 +27,7 @@ public class Application {
 		Config config = new Config();
 
 		WatchPath watchPath = new WatchPath(config.printDir);
-		var filePathQueue = new ConcurrentLinkedQueue<PathParser>();
+		var filePathQueue = new ConcurrentLinkedQueue<Path>();
 		var printJobQueue = new ConcurrentLinkedQueue<SendDocument>();
 		var fileSent = new CopyOnWriteArrayList<GetJobAttributes>();
 
@@ -39,7 +39,7 @@ public class Application {
 
 		Watcher watcher = WatcherFactory.create(watchPath, filePathQueue);
 
-		watcher.watch(watchPath, (path) -> new PathParser(path));
+		watcher.watch(watchPath);
 
 		Thread.startVirtualThread(new JobCreator(filePathQueue, printJobQueue, printer));
 	}
