@@ -7,6 +7,8 @@ import de.gmuth.ipp.core.IppResponse;
 import de.gmuth.ipp.core.IppOperation;
 import de.gmuth.ipp.core.IppTag;
 
+import java.time.Duration;
+import java.time.Instant;
 import java.util.Arrays;
 import java.util.Optional;
 
@@ -15,8 +17,9 @@ import org.printing_factory.printing.IppConnection.FailedToConnectException;
 
 public class GetJobAttributes
 		extends OperationSender<IppResponse, GetJobAttributes.GetJobAttributesProps> {
+	private State latestState;
 
-	protected record GetJobAttributesProps(Integer jobId, String requestingUser) {
+	protected record GetJobAttributesProps(Integer jobId, String requestingUser, Instant created_at) {
 	}
 
 	public GetJobAttributes(IppConnection connection, GetJobAttributes.GetJobAttributesProps props) {
@@ -25,19 +28,35 @@ public class GetJobAttributes
 	}
 
 	public Optional<State> getState() {
+		Duration elapsed = Duration.between(this.props.created_at(), Instant.now());
+		boolean aLongTime = elapsed.compareTo(Duration.ofMinutes(5)) > 0;
 		try {
 			IppResponse response = send();
 			// Check the response
+			if (!response.isSuccessful() && aLongTime) {
+				this.latestState = State.Timeout;
+				return Optional.of(this.latestState);
+			}
 			if (!response.isSuccessful())
 				return Optional.empty();
 
-			System.out.println("Job attributes retrieved successfully");
 			JobState state = response.getJobGroup().getValue("job-state");
 
-			return Optional.of(State.fromJobState(state));
+			if ((state == JobState.Pending || state == JobState.ProcessingStopped)
+					&& aLongTime) {
+				this.latestState = State.TooLong;
+				return Optional.of(this.latestState);
+			}
+
+			this.latestState = State.fromJobState(state);
+
+			return Optional.of(this.latestState);
+
 		} catch (FailedToConnectException e) {
-			return Optional.of(State.Cancel);
+			this.latestState = State.Cancel;
+			return Optional.of(this.latestState);
 		}
+
 	}
 
 	@Override
@@ -54,17 +73,30 @@ public class GetJobAttributes
 		IppAttributesGroup operationGroup = request.getOperationGroup();
 		operationGroup.attribute("requesting-name", IppTag.NameWithoutLanguage,
 				props.requestingUser);
-		
+
 		return request;
 	}
 
+	public Optional<CancelJob> cancelJob() {
+		if (this.latestState == State.Done) {
+			return Optional.empty();
+		}
+
+		return Optional.of(new CancelJob(this.connection,
+				new CancelJob.CancelJobProps(this.props.jobId(), this.props.requestingUser())));
+	}
+
+	public Integer getJobId() {
+		return this.props.jobId();
+	}
+
 	public enum State {
-		Cancel, Done, Pending;
+		Cancel, Done, Pending, Timeout, TooLong;
 
 		static State fromJobState(JobState s) {
 			return switch (s) {
 				case Completed -> Done;
-				case Canceled, Aborted -> Cancel;
+				case Canceled, Aborted, PendingHeld -> Cancel;
 				default -> Pending;
 			};
 		}

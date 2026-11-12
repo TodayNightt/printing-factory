@@ -15,6 +15,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.StandardOpenOption;
+import java.time.Instant;
 
 public class SendDocument
 		extends OperationSender<GetJobAttributes, SendDocument.SendDocumentProps> {
@@ -48,7 +49,8 @@ public class SendDocument
 				System.out.println("Failed to send document");
 			}
 
-			return new GetJobAttributes(connection, new GetJobAttributesProps(props.jobId, props.requestingUser));
+			return new GetJobAttributes(connection,
+					new GetJobAttributesProps(props.jobId, props.requestingUser, Instant.now()));
 		} catch (IOException e) {
 			throw e;
 		}

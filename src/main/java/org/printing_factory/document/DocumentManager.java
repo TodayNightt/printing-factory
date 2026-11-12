@@ -31,8 +31,11 @@ public class DocumentManager {
 
 		final LocalOfficeManager officeManager = LocalOfficeManager.install();
 
+		boolean isTempFile = false;
+
 		File file = switch (fileDescriptor.getType()) {
 			case DOCX -> {
+				isTempFile = true;
 				try (InputStream inputStream = convertToPdf(officeManager, fileDescriptor.getFile())) {
 					Path temp = Files.createTempFile("tmp_" + fileDescriptor.getFileName(), ".pdf");
 
@@ -48,7 +51,7 @@ public class DocumentManager {
 			default -> fileDescriptor.getFile();
 		};
 
-		return new DocumentDescriptor(fileDescriptor, file);
+		return new DocumentDescriptor(fileDescriptor, isTempFile, file);
 	}
 
 	private static InputStream convertToPdf(LocalOfficeManager officeManager, File file) throws OfficeException {

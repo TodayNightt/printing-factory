@@ -3,7 +3,6 @@ package org.printing_factory;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.concurrent.ConcurrentLinkedQueue;
-import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.logging.Logger;
 
 import org.printing_factory.config.Config;
@@ -37,7 +36,7 @@ public class Application {
 		var printer = new Printer(config.printerUri);
 		var filePathQueue = new ConcurrentLinkedQueue<Path>();
 		var printJobQueue = new ConcurrentLinkedQueue<DocumentDescriptor>();
-		var fileSent = new CopyOnWriteArrayList<JobDescriptor>();
+		var fileSent = new ConcurrentLinkedQueue<JobDescriptor>();
 
 		Thread.startVirtualThread(new JobCreator(filePathQueue, printJobQueue));
 

@@ -1,7 +1,6 @@
 package org.printing_factory;
 
 import java.util.concurrent.ConcurrentLinkedQueue;
-import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -15,12 +14,11 @@ import org.printing_factory.printing.ipp.jobs.SendDocument;
 public class JobSender implements Runnable {
 	private static final Logger logger = Logger.getLogger(JobSender.class.getName());
 	private final ConcurrentLinkedQueue<DocumentDescriptor> jobQueue;
+	private final ConcurrentLinkedQueue<JobDescriptor> jobSent;
 	private Printer printer;
 
-	private final CopyOnWriteArrayList<JobDescriptor> jobSent;
-
 	public JobSender(ConcurrentLinkedQueue<DocumentDescriptor> jobQueue,
-			CopyOnWriteArrayList<JobDescriptor> jobSent,
+			ConcurrentLinkedQueue<JobDescriptor> jobSent,
 			Printer printer) {
 		this.jobQueue = jobQueue;
 		this.jobSent = jobSent;
