@@ -20,7 +20,7 @@ repositories {
 dependencies {
     // This dependency is used by the application.
     implementation(libs.guava)
-    implementation("de.gmuth:ipp-client:3.2")
+    implementation("de.gmuth:ipp-client:3.5.1")
     implementation("commons-io:commons-io:2.18.0")
     implementation("org.jodconverter:jodconverter-local-lo:4.4.8")
 }

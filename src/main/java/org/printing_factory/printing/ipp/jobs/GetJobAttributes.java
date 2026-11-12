@@ -8,51 +8,65 @@ import de.gmuth.ipp.core.IppOperation;
 import de.gmuth.ipp.core.IppTag;
 
 import java.util.Arrays;
-import org.printing_factory.printing.IppConnection;
+import java.util.Optional;
 
-public class GetJobAttributes extends OperationSender<Void, GetJobAttributes.GetJobAttributesProps> {
-	private IppResponse response;
-	private IppRequest request;
+import org.printing_factory.printing.IppConnection;
+import org.printing_factory.printing.IppConnection.FailedToConnectException;
+
+public class GetJobAttributes
+		extends OperationSender<IppResponse, GetJobAttributes.GetJobAttributesProps> {
 
 	protected record GetJobAttributesProps(Integer jobId, String requestingUser) {
 	}
 
-	public GetJobAttributes(IppConnection connection, GetJobAttributes.GetJobAttributesProps props) throws Exception {
+	public GetJobAttributes(IppConnection connection, GetJobAttributes.GetJobAttributesProps props) {
 		this.connection = connection;
-		this.request = generateRequest(props);
-
-		send();
+		this.props = props;
 	}
 
-	public boolean isCompleted() throws Exception {
-		// Check the response
-		if (response.isSuccessful()) {
+	public Optional<State> getState() {
+		try {
+			IppResponse response = send();
+			// Check the response
+			if (!response.isSuccessful())
+				return Optional.empty();
+
 			System.out.println("Job attributes retrieved successfully");
 			JobState state = response.getJobGroup().getValue("job-state");
 
-			return state == JobState.Completed;
-		} else {
-			// send();
-			// return isCompleted();
-			return false;
+			return Optional.of(State.fromJobState(state));
+		} catch (FailedToConnectException e) {
+			return Optional.of(State.Cancel);
 		}
 	}
 
 	@Override
-	public Void send() throws Exception {
-		response = connection.sendRequest(request);
-		return null;
+	public IppResponse send() throws FailedToConnectException {
+		IppRequest request = generateRequest();
+		return connection.sendRequest(request);
 	}
 
 	@Override
-	protected IppRequest generateRequest(GetJobAttributesProps props) {
+	protected IppRequest generateRequest() {
 		IppRequest request = connection.createRequest(IppOperation.GetJobAttributes,
 				Arrays.asList("job-state", "job-state-reasons"));
 		// Operation group
 		IppAttributesGroup operationGroup = request.getOperationGroup();
-		operationGroup.attribute("requesting-name", IppTag.NameWithoutLanguage, props.requestingUser);
-		operationGroup.attribute("job-id", IppTag.Integer, props.jobId);
-
+		operationGroup.attribute("requesting-name", IppTag.NameWithoutLanguage,
+				props.requestingUser);
+		
 		return request;
+	}
+
+	public enum State {
+		Cancel, Done, Pending;
+
+		static State fromJobState(JobState s) {
+			return switch (s) {
+				case Completed -> Done;
+				case Canceled, Aborted -> Cancel;
+				default -> Pending;
+			};
+		}
 	}
 }

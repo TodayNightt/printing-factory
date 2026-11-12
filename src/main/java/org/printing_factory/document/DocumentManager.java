@@ -1,4 +1,4 @@
-package org.printing_factory.docu;
+package org.printing_factory.document;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -18,10 +18,8 @@ import org.printing_factory.file.FileDescriptor;
 import org.printing_factory.printing.PathParser.InvalidFileParametersException;
 
 public class DocumentManager {
-	public record DocumentManagerProps(FileDescriptor fileDescriptor, File file) {
-	};
 
-	public static DocumentManagerProps manage(Path filePath)
+	public static DocumentDescriptor manage(Path filePath)
 			throws NotSupportedFileException, RetrieveFileHandleException, FileConvertionException,
 			InvalidFileParametersException {
 
@@ -50,7 +48,7 @@ public class DocumentManager {
 			default -> fileDescriptor.getFile();
 		};
 
-		return new DocumentManagerProps(fileDescriptor, file);
+		return new DocumentDescriptor(fileDescriptor, file);
 	}
 
 	private static InputStream convertToPdf(LocalOfficeManager officeManager, File file) throws OfficeException {

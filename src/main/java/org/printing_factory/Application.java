@@ -27,13 +27,14 @@ public class Application {
 		Config config = new Config();
 
 		WatchPath watchPath = new WatchPath(config.printDir);
+		var printer = new Printer(config.printerUri);
 		var filePathQueue = new ConcurrentLinkedQueue<Path>();
-		var printJobQueue = new ConcurrentLinkedQueue<SendDocument>();
-		var fileSent = new CopyOnWriteArrayList<GetJobAttributes>();
+		var printJobQueue = new ConcurrentLinkedQueue<DocumentDescriptor>();
+		var fileSent = new CopyOnWriteArrayList<JobDescriptor>();
 
-		var printer = new Printer(URI.create(config.printerUri));
+		Thread.startVirtualThread(new JobCreator(filePathQueue, printJobQueue));
 
-		Thread.startVirtualThread(new JobsSender(printJobQueue, fileSent));
+		Thread.startVirtualThread(new JobSender(printJobQueue, fileSent, printer));
 
 		Thread.startVirtualThread(new StatusChecker(fileSent));
 

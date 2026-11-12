@@ -2,8 +2,9 @@ package org.printing_factory.printing;
 
 import java.net.URI;
 import java.util.List;
-
 import javax.annotation.Nullable;
+
+import com.sun.star.uno.RuntimeException;
 
 import de.gmuth.ipp.client.IppClient;
 import de.gmuth.ipp.client.IppConfig;
@@ -23,61 +24,76 @@ import de.gmuth.ipp.core.IppResponse;
  * connection with the printer`
  */
 public class IppConnection {
-    private URI address;
-    protected IppClient connection;
-    protected IppAttributesGroup printerAttributes;
+	private URI address;
+	protected IppClient connection;
+	protected IppAttributesGroup printerAttributes;
 
-    protected IppConfig config;
+	protected IppConfig config;
 
-    public IppAttributesGroup getPrinterAttributes() {
-        return printerAttributes;
-    }
+	public IppAttributesGroup getPrinterAttributes() {
+		return printerAttributes;
+	}
 
-    public String getUserName() {
-        return config.getUserName();
-    }
+	public String getUserName() {
+		return config.getUserName();
+	}
 
-    public String getIppVersion() {
-        return config.getIppVersion();
-    }
+	public String getIppVersion() {
+		return config.getIppVersion();
+	}
 
-    public IppConnection(URI address) {
-        this.address = address;
-        this.config = new IppConfig();
-        config.trustAnyCertificateAndSSLHostname();
-        this.connection = new IppClient(config);
+	public IppConnection(URI address) {
+		this.address = address;
+		this.config = new IppConfig();
+		config.trustAnyCertificateAndSSLHostname();
+		this.connection = new IppClient(config);
 
-        var req = connection.ippRequest(IppOperation.GetPrinterAttributes, address, null, null);
-        IppResponse res;
-        try {
-            res = sendRequest(req);
+		var req = connection.ippRequest(IppOperation.GetPrinterAttributes, address, null, null);
+		IppResponse res;
+		try {
+			res = sendRequest(req);
 
-            printerAttributes = res.getPrinterGroup();
-        } catch (Exception e) {
-            throw new RuntimeException("Failed to connect to printer");
-        }
-    }
+			printerAttributes = res.getPrinterGroup();
+		} catch (Exception e) {
+			throw new RuntimeException("Failed to connect to printer");
+		}
+	}
 
-    public IppResponse sendRequest(IppRequest request) throws Exception {
-        // try establish the connection then send the request
-        boolean isConnected = false;
-        while (!isConnected) {
-            var req = connection.ippRequest(IppOperation.IdentifyPrinter, address, null, null);
-            try {
-                connection.exchange(req);
-                isConnected = true;
-            } catch (Exception e) {
-                System.out.println(e.getMessage());
-                System.out.println("Failed to connect to printer, retrying in 5 seconds");
-                Thread.sleep(5000);
-            }
-        }
+	public IppResponse sendRequest(IppRequest request) throws FailedToConnectException {
+		// try establish the connection then send the request
+		boolean isConnected = false;
+		int maxRequest = 0;
+		while (!isConnected) {
+			if (maxRequest > 5) {
+				throw new FailedToConnectException();
+			}
+			maxRequest++;
+			var req = connection.ippRequest(IppOperation.IdentifyPrinter, address, null, null);
+			try {
+				connection.exchange(req);
+				isConnected = true;
+			} catch (Exception e) {
+				System.out.println(e.getMessage());
+				System.out.println("Failed to connect to printer, retrying in 5 seconds");
+				try {
+					Thread.sleep(5000);
+				} catch (InterruptedException ie) {
+					throw new RuntimeException("failed to sleep");
+				}
+			}
+		}
 
-        return connection.exchange(request);
-    }
+		return connection.exchange(request);
+	}
 
-    public IppRequest createRequest(IppOperation operation, @Nullable List<String> requestingAttr) {
-        return connection.ippRequest(operation, address, requestingAttr, config.getUserName());
-    }
+	public IppRequest createRequest(IppOperation operation, @Nullable List<String> requestingAttr) {
+		return connection.ippRequest(operation, address, requestingAttr, config.getUserName());
+	}
+
+	public class FailedToConnectException extends Exception {
+		FailedToConnectException() {
+			super();
+		}
+	}
 
 }

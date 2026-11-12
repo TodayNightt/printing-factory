@@ -42,7 +42,7 @@ public class FileDescriptor {
 	}
 
 	public String getFileName() {
-		return this.file.getAbsolutePath();
+		return this.file.getName();
 	}
 
 	public PathParser getPrintOptions() {

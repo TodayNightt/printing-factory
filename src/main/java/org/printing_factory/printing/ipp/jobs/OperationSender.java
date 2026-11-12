@@ -10,5 +10,5 @@ public abstract class OperationSender<Ret, ReqProps> {
 
 	public abstract Ret send() throws Exception;
 
-	protected abstract IppRequest generateRequest(ReqProps props);
+	protected abstract IppRequest generateRequest();
 }

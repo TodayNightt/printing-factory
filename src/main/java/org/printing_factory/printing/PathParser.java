@@ -16,7 +16,7 @@ public class PathParser {
 	private Tray tray;
 
 	public PathParser(String fileName) throws InvalidFileParametersException {
-		Pattern parser = Pattern.compile("(q:(?<quantity>\\d*))*(t:(?<tray>\\d*))*(s:(?<sides>s|dv|dh))*");
+		Pattern parser = Pattern.compile("(q&(?<quantity>\\d+))*(t&(?<tray>\\d+))*(s&(?<sides>s|dv|dh))*");
 		Matcher m = parser.matcher(fileName);
 
 		if (!m.hasMatch())
