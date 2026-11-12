@@ -58,9 +58,11 @@ public class LocalWatcher implements Watcher {
 		FileAlterationMonitor monitor = new FileAlterationMonitor(5000); // Poll every 5 seconds
 		monitor.addObserver(observer);
 
-		var t = Thread.startVirtualThread(monitor);
-
-		t.setUncaughtExceptionHandler(new ExceptionCapturer());
+		try {
+			monitor.start();
+		} catch (Exception e) {
+			throw new IOException("Failed to start watcher", e);
+		}
 	}
 
 	private void setToQueue(Path path) {

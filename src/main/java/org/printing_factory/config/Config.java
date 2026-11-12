@@ -13,7 +13,7 @@ public class Config {
 
 	public String printDir;
 
-	public Config() {
+	public Config() throws IllegalStateException {
 		Map<String, String> envs = System.getenv();
 
 		ArrayDeque<String> requiredEnvs = new ArrayDeque<>(List.of("PRINT_DIR", "PRINTER_IP"));
